@@ -6,3 +6,4 @@ db
 incremental_db
 jtag.cdf
 output_files
+*.bak

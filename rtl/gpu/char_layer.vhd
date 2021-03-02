@@ -79,7 +79,15 @@ entity char_layer is
     video : in video_t;
 
     -- graphics data
-    data : out byte_t
+    data : out byte_t;
+
+    -- hiscore system
+    hs_address  : in  unsigned(CHAR_RAM_CPU_ADDR_WIDTH-1 downto 0);
+    hs_data_out : out std_logic_vector(7 downto 0);
+    hs_data_in  : in  std_logic_vector(7 downto 0);
+    hs_write    : in  std_logic;
+    hs_access   : in  std_logic;
+    hs_cs_char  : in  std_logic
   );
 end char_layer;
 
@@ -109,12 +117,30 @@ architecture arch of char_layer is
   -- destination position
   signal dest_pos : pos_t;
 
+  -- HISCORE system
+  -- mux so high score can share first char ram port
+  signal char_ram_cs   : std_logic;
+  signal char_ram_we   : std_logic;
+  signal char_ram_addr : unsigned(CHAR_RAM_CPU_ADDR_WIDTH-1 downto 0);
+  signal char_ram_din  : byte_t;
+  signal char_ram_dout : byte_t;
+
   -- aliases to extract the components of the horizontal and vertical position
   alias col      : unsigned(4 downto 0) is dest_pos.x(7 downto 3);
   alias row      : unsigned(4 downto 0) is dest_pos.y(7 downto 3);
   alias offset_x : unsigned(2 downto 0) is dest_pos.x(2 downto 0);
   alias offset_y : unsigned(2 downto 0) is dest_pos.y(2 downto 0);
+  
 begin
+
+  -- Hiscore write enable for char ram
+  char_ram_cs <= hs_cs_char when hs_access = '1' else ram_cs;
+  char_ram_we <= hs_write when hs_cs_char = '1' else ram_we;
+  char_ram_addr <= hs_address when hs_cs_char = '1' else ram_addr;
+  char_ram_din <= hs_data_in when hs_cs_char = '1' else ram_din;
+  hs_data_out <= char_ram_dout;
+  ram_dout <= char_ram_dout;
+  
   -- The character RAM (2kB) contains the code and colour of each tile in the
   -- tilemap.
   char_ram : entity work.true_dual_port_ram
@@ -126,11 +152,11 @@ begin
   port map (
     -- CPU interface
     clk_a  => clk,
-    cs_a   => ram_cs,
-    we_a   => ram_we and not busy,
-    addr_a => ram_addr,
-    din_a  => ram_din,
-    dout_a => ram_dout,
+    cs_a   => char_ram_cs,
+    we_a   => char_ram_we and not busy,
+    addr_a => char_ram_addr,
+    din_a  => char_ram_din,
+    dout_a => char_ram_dout,
 
     -- GPU interface
     clk_b  => clk,

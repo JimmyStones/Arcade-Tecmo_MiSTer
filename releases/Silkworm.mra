@@ -57,4 +57,13 @@
     <!-- pcm -->
     <part crc="5b553644" name="silkworm.1" />
   </rom>
+  <rom index="3" md5="none">
+    <part>
+        00 00 D2 62 00 61 00 59 
+        00 00 C8 48 00 18 20 30 
+        00 00 D5 4E 00 04 00 00 
+        00 00 D5 72 00 04 00 00 
+    </part>
+  </rom>
+  <nvram index="4" size="129"/>
 </misterromdescription>

@@ -114,7 +114,7 @@ entity rom_controller is
 
     -- IOCTL interface
     ioctl_addr     : in unsigned(IOCTL_ADDR_WIDTH-1 downto 0);
-    ioctl_data     : in byte_t;
+    ioctl_dout     : in byte_t;
     ioctl_wr       : in std_logic;
     ioctl_download : in std_logic;
 
@@ -190,7 +190,7 @@ begin
   generic map (SIZE => 4)
   port map (
     clk   => clk,
-    din   => ioctl_data,
+    din   => ioctl_dout,
     dout  => download_data,
     we    => ioctl_download and ioctl_wr,
     valid => download_req

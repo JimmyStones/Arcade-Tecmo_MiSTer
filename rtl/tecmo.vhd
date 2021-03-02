@@ -85,7 +85,7 @@ entity tecmo is
 
     -- IOCTL interface
     ioctl_addr     : in unsigned(IOCTL_ADDR_WIDTH-1 downto 0);
-    ioctl_data     : in byte_t;
+    ioctl_dout     : in byte_t;
     ioctl_wr       : in std_logic;
     ioctl_download : in std_logic;
 
@@ -104,7 +104,14 @@ entity tecmo is
     b : out std_logic_vector(3 downto 0);
 
     -- audio data
-    audio : out audio_t
+    audio : out audio_t;
+
+    -- hiscore system
+    hs_address       : in  unsigned(15 downto 0);
+    hs_data_out      : out std_logic_vector(7 downto 0);
+    hs_data_in       : in  std_logic_vector(7 downto 0);
+    hs_write         : in  std_logic;
+    hs_access        : in  std_logic
   );
 end tecmo;
 
@@ -196,7 +203,13 @@ architecture arch of tecmo is
 
   -- RGB data
   signal rgb : rgb_t;
-
+  
+  -- HISCORE system
+  signal hs_cs_work       : std_logic;
+  signal hs_cs_char       : std_logic;
+  signal hs_data_out_work : byte_t;
+  signal hs_data_out_char : byte_t;
+  
   -- Returns the sys (coin/start) nibble
   --
   -- The ordering of the bits is different depending on the game.
@@ -252,18 +265,32 @@ begin
     q    => pause_rising
   );
 
+  -- Hiscore system setup
+  hs_cs_work <= '1' when addr_in_range(hs_address, game_config.mem_map.work_ram)    else '0';
+  hs_cs_char <= '1' when addr_in_range(hs_address, game_config.mem_map.char_ram)    else '0';
+  hs_data_out <= hs_data_out_work when hs_cs_work ='1' else hs_data_out_char;
+  
   -- work RAM
-  work_ram : entity work.single_port_ram
-  generic map (ADDR_WIDTH => WORK_RAM_ADDR_WIDTH)
+  work_ram : entity work.true_dual_port_ram
+  generic map (ADDR_WIDTH_A => WORK_RAM_ADDR_WIDTH, ADDR_WIDTH_B => WORK_RAM_ADDR_WIDTH)
   port map (
-    clk  => clk,
-    cs   => work_ram_cs,
-    addr => cpu_addr(WORK_RAM_ADDR_WIDTH-1 downto 0),
-    din  => cpu_dout,
-    dout => work_ram_dout,
-    we   => not cpu_wr_n
-  );
+    clk_a  => clk,
+    cs_a   => work_ram_cs,
+    addr_a => cpu_addr(WORK_RAM_ADDR_WIDTH-1 downto 0),
+    din_a  => cpu_dout,
+    dout_a => work_ram_dout,
+    we_a   => not cpu_wr_n,
 
+    -- HISCORE R/W
+    clk_b  => clk,
+    cs_b   => hs_cs_work,
+    addr_b => hs_address(WORK_RAM_ADDR_WIDTH-1 downto 0),
+    din_b  => hs_data_in,
+    dout_b => hs_data_out_work,
+    we_b   => hs_write
+  );
+  
+  
   -- ROM controller
   rom_controller : entity work.rom_controller
   port map (
@@ -312,7 +339,7 @@ begin
 
     -- IOCTL interface
     ioctl_addr     => ioctl_addr,
-    ioctl_data     => ioctl_data,
+    ioctl_dout     => ioctl_dout,
     ioctl_wr       => ioctl_wr,
     ioctl_download => ioctl_download,
 
@@ -332,7 +359,7 @@ begin
     RESET_n     => not reset,
     CLK         => clk,
     CEN         => cen_6,
-    WAIT_n      => not (gpu_busy or pause_reg),
+    WAIT_n      => not (gpu_busy or pause_reg or hs_access),
     INT_n       => cpu_int_n,
     M1_n        => cpu_m1_n,
     MREQ_n      => cpu_mreq_n,
@@ -395,7 +422,14 @@ begin
 
     -- video signals
     video => video,
-    rgb   => rgb
+    rgb   => rgb,
+
+    hs_address     => hs_address(CHAR_RAM_CPU_ADDR_WIDTH-1 downto 0),
+    hs_data_out    => hs_data_out_char,
+    hs_data_in     => hs_data_in,
+    hs_write       => hs_write,
+    hs_access      => hs_access,
+    hs_cs_char     => hs_cs_char
   );
 
   -- sound subsystem

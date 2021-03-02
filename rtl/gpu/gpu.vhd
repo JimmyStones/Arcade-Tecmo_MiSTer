@@ -101,7 +101,15 @@ entity gpu is
 
     -- video signals
     video : buffer video_t;
-    rgb   : out rgb_t
+    rgb   : out rgb_t;
+
+    -- hiscore system
+    hs_address       : in  unsigned(CHAR_RAM_CPU_ADDR_WIDTH-1 downto 0);
+    hs_data_out      : out std_logic_vector(7 downto 0);
+    hs_data_in       : in  std_logic_vector(7 downto 0);
+    hs_write         : in  std_logic;
+    hs_access        : in  std_logic;
+    hs_cs_char       : in  std_logic
   );
 end gpu;
 
@@ -183,7 +191,15 @@ begin
 
       -- video signals
       video => video,
-      data  => char_data
+      data  => char_data,
+
+      -- hiscore system
+      hs_address     => hs_address,
+      hs_data_out    => hs_data_out,
+      hs_data_in     => hs_data_in,
+      hs_write       => hs_write,
+      hs_access      => hs_access,
+      hs_cs_char     => hs_cs_char
     );
   end generate;
 

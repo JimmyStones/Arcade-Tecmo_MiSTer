@@ -63,4 +63,14 @@
     <!-- pcm -->
     <part crc="3cc98c5a" name="cpu_1f.bin" />
   </rom>
+  <rom index="3" md5="none">
+    <part>
+        00 00 C9 83 01 C4 41 00 
+        00 00 C0 23 00 02 00 00 
+        00 00 C0 25 00 01 03 03 
+        00 00 C0 26 00 01 00 00 
+        00 00 D0 6C 00 08 01 60 
+    </part>
+  </rom>
+  <nvram index="4" size="129"/>
 </misterromdescription>

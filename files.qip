@@ -17,6 +17,7 @@ set_global_assignment -name VHDL_FILE rtl/gpu/scroll_layer.vhd
 set_global_assignment -name VHDL_FILE rtl/gpu/sprite_blitter.vhd
 set_global_assignment -name VHDL_FILE rtl/gpu/sprite_layer.vhd
 set_global_assignment -name VHDL_FILE rtl/gpu/video_gen.vhd
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/hiscore.sv
 set_global_assignment -name VHDL_FILE rtl/math.vhd
 set_global_assignment -name VHDL_FILE rtl/mem/dual_port_ram.vhd
 set_global_assignment -name VHDL_FILE rtl/mem/rom_controller.vhd
